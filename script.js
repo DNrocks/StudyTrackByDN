@@ -220,8 +220,13 @@ async function downloadFromCloud() {
   }
 }
 
-document.getElementById("uploadCloudBtn").onclick = uploadToCloud;
-document.getElementById("downloadCloudBtn").onclick = downloadFromCloud;
+document.addEventListener("DOMContentLoaded", () => {
+  const uploadBtn = document.getElementById("uploadCloudBtn");
+  const downloadBtn = document.getElementById("downloadCloudBtn");
+
+  if (uploadBtn) uploadBtn.onclick = uploadToCloud;
+  if (downloadBtn) downloadBtn.onclick = downloadFromCloud;
+});
 
 // ------------------ INIT ------------------
 loadProfiles();
