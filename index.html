@@ -3,37 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>Study Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <link rel="stylesheet" href="style.css">
-
-  <!-- Charts & PDF -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- Firebase Compat SDKs (reliable on GitHub Pages) -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <div id="app">
-    <!-- Main vertical study flow -->
     <div id="main">
-      <div class="header-row">
-        <h1>Study Tracker</h1>
-        <div id="syncStatus" class="muted">Sync: —</div>
-      </div>
+      <h1>Study Tracker</h1>
 
-      <!-- Profile controls -->
       <div id="profileControls">
         <select id="profileSelect" aria-label="Select profile"></select>
         <input id="newProfileInput" placeholder="New Profile Name" />
         <button id="createProfileBtn">Create Profile</button>
-        <button id="deleteProfileBtn" class="danger">Delete Profile</button>
       </div>
       <div id="currentProfile" class="muted"></div>
 
-      <!-- Session controls -->
       <div id="sessionControls">
         <input id="exName" placeholder="Session Name (e.g., Arrays, Sorting...)" />
         <button id="startSessionBtn" disabled>Start Session</button>
@@ -41,46 +28,36 @@
         <button id="endSessionBtn" disabled>End Session</button>
       </div>
 
-      <!-- Timer -->
       <div id="timerDisplay">00:00:00</div>
 
-      <!-- Question tracking -->
       <div id="questionControls">
         <button id="correctBtn" disabled>✔ Correct</button>
         <button id="wrongBtn" disabled>❌ Wrong</button>
         <button id="skippedBtn" disabled>⏭ Skipped</button>
       </div>
 
-      <!-- Question boxes -->
       <div id="questionGrid" aria-label="Question outcomes grid"></div>
 
-      <!-- Session history -->
       <h2>Previous Sessions</h2>
       <ul id="sessions"></ul>
 
-      <!-- Collapsible stats panel (toggled from sidebar) -->
       <div id="statsPanel" class="panel hidden">
         <h3>Profile Stats</h3>
         <div id="statsContent"></div>
       </div>
     </div>
 
-    <!-- Sidebar with non-study actions -->
     <aside id="sidebar" aria-label="Sidebar actions">
       <button id="darkModeBtn">🌙 Dark Mode</button>
       <button id="exportPdfBtn">📄 Export PDF</button>
       <button id="exportJsonBtn">💾 Export JSON</button>
       <input type="file" id="importJsonInput" accept="application/json" style="display:none" />
       <button id="importJsonBtn">📂 Add Previous Data</button>
-      <!-- 🔹 New Cloud Sync Buttons -->
-      <button id="uploadCloudBtn">☁ Upload to Cloud</button>
-      <button id="downloadCloudBtn">☁ Download from Cloud</button>
       <button id="showStatsBtn">📊 Profile Stats</button>
       <button id="showGraphsBtn">📈 Graphs</button>
     </aside>
   </div>
 
-  <!-- Graph modal -->
   <div id="graphModal" class="modal" aria-hidden="true">
     <div class="modal-content">
       <span class="close" id="closeGraphModal" role="button" aria-label="Close graphs">&times;</span>
@@ -91,6 +68,6 @@
     </div>
   </div>
 
-  <script type="module" src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
