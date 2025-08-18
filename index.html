@@ -916,7 +916,7 @@
       doc.text(`Sessions: ${list.length}`, 40, y); y += 14;
       doc.text(`Total Questions: ${totalQs}`, 40, y); y += 14;
       doc.text(`Avg Duration: ${list.length ? formatTime(Math.round(totalDur/list.length)) : "00:00:00"}`, 40, y); y += 20;
-      doc.text(`Overall: ✔ ${sumC} (${percent(sumC,totalQs)}) | ❌ ${sumW} (${percent(sumW,totalQs)}) | ⏭ ${sumS} (${percent(sumS,totalQs)})`, 40, y);
+      doc.text(`Overall: Correct ${sumC} (${percent(sumC,totalQs)}) | Wrong ${sumW} (${percent(sumW,totalQs)}) | skipped ${sumS} (${percent(sumS,totalQs)})`, 40, y);
       y += 24;
 
       // sessions
@@ -925,7 +925,7 @@
         const t = s.correct + s.wrong + s.skipped;
         const line1 = `${i+1}. ${s.name}`;
         const line2 = `${new Date(s.start).toLocaleString()} • Duration ${formatTime(s.durationMs)} • Qs ${t}`;
-        const line3 = `✔ ${s.correct} (${percent(s.correct,t)}) | ❌ ${s.wrong} (${percent(s.wrong,t)}) | ⏭ ${s.skipped} (${percent(s.skipped,t)})`;
+        const line3 = `Correct ${s.correct} (${percent(s.correct,t)}) | Wrong ${s.wrong} (${percent(s.wrong,t)}) | skipped ${s.skipped} (${percent(s.skipped,t)})`;
 
         if (y > 760) { doc.addPage(); y = 40; }
         doc.text(line1, 40, y); y += 14;
