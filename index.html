@@ -205,7 +205,10 @@
       width: min(920px, 92vw);
       border-radius: 10px;
       box-shadow: var(--shadow);
+      max-height: 80vh;       /* ADDED */
+      overflow-y: auto;       /* ADDED */
     }
+
     .close {
       float: right;
       font-size: 1.6rem;
@@ -284,6 +287,9 @@
       <canvas id="weeklyChart" height="160"></canvas>
       <h3 style="margin-top:20px;">Monthly (per week, last 8 weeks)</h3>
       <canvas id="monthlyChart" height="160"></canvas>
+      <h3 style="margin-top:20px;">Per-Session Breakdown (Correct vs Wrong vs Skipped)</h3>
+      <canvas id="sessionBreakdownChart" height="160"></canvas>
+
     </div>
   </div>
 
@@ -399,6 +405,7 @@
 
     let weeklyChart = null;
     let monthlyChart = null;
+    let perSessionChart = null;
 
     /* ========= Utilities ========= */
     function formatTime(ms) {
@@ -834,7 +841,45 @@
           scales: { y: { beginAtZero: true, ticks: { precision:0 } } }
         }
       });
+      // --- New per-session breakdown chart ---
+      const sessionCtx = document.getElementById("sessionBreakdownChart").getContext("2d");
+      if (perSessionChart) perSessionChart.destroy();
+      perSessionChart = new Chart(sessionCtx, {
+        type: "line",
+        data: {
+          labels: list.map((s, i) => `S${i + 1}`),
+          datasets: [
+            {
+              label: "Correct",
+              data: list.map(s => s.correct),
+              borderColor: "#27ae60",
+              backgroundColor: "rgba(39, 174, 96, 0.1)",
+              tension: 0.3
+            },
+            {
+              label: "Wrong",
+              data: list.map(s => s.wrong),
+              borderColor: "#e74c3c",
+              backgroundColor: "rgba(231, 76, 60, 0.1)",
+              tension: 0.3
+            },
+            {
+              label: "Skipped",
+              data: list.map(s => s.skipped),
+              borderColor: "#7f8c8d",
+              backgroundColor: "rgba(127, 140, 141, 0.1)",
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "top" } },
+          scales: { y: { beginAtZero: true, ticks: { precision:0 } } }
+        }
+      });
     }
+    
 
     /* ========= Sidebar Actions ========= */
     darkModeBtn.onclick = () => {
