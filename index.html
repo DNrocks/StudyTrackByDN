@@ -242,6 +242,17 @@
         <button id="createProfileBtn">Create Profile</button>
       </div>
       <div id="currentProfile" class="muted"></div>
+      <div id="profileXP" style="color:red; font-weight:bold;"></div>
+      <div id="todoPanel" class="panel hidden">
+        <h3>To-Do List</h3>
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <input id="todoInput" placeholder="New task..." style="flex:1" />
+          <button id="addTodoBtn">Add</button>
+        </div>
+        <ul id="todoList"></ul>
+      </div>
+
+
 
       <div id="sessionControls">
         <input id="exName" placeholder="Session Name (e.g., Arrays, Sorting...)" />
@@ -277,6 +288,8 @@
       <button id="importJsonBtn">📂 Add Previous Data</button>
       <button id="showStatsBtn">📊 Profile Stats</button>
       <button id="showGraphsBtn">📈 Graphs</button>
+      <button id="showTodoBtn">📝 To-Do</button>
+
     </aside>
   </div>
 
@@ -501,7 +514,7 @@
       
       currentProfile = name;
       currentProfileView.textContent = `Profile: ${name}`;
-
+      loadTodos(name);
       // Use a real-time listener for sessions
       try {
         db.collection("sessions")
@@ -696,39 +709,122 @@
 
     /* ========= Stats ========= */
     function renderStatsPanel() {
-      if (!currentProfile || !sessions[currentProfile]) {
-        statsContent.innerHTML = "";
-        return;
-      }
-      const list = sessions[currentProfile] || [];
-      const totalSessions = list.length;
-      let totalQs = 0;
-      let totalDur = 0;
-      let sumCorrect = 0, sumWrong = 0, sumSkipped = 0;
+  if (!currentProfile || !sessions[currentProfile]) {
+    statsContent.innerHTML = "";
+    return;
+  }
+  const list = sessions[currentProfile] || [];
+  const totalSessions = list.length;
+  let totalQs = 0;
+  let totalDur = 0;
+  let sumCorrect = 0, sumWrong = 0, sumSkipped = 0;
+  let xpTotal = 0; // moved here
 
-      list.forEach(s => {
-        const t = s.correct + s.wrong + s.skipped;
-        totalQs += t;
-        totalDur += (s.durationMs || 0);
-        sumCorrect += s.correct;
-        sumWrong += s.wrong;
-        sumSkipped += s.skipped;
-      });
+  list.forEach(s => {
+    const t = s.correct + s.wrong + s.skipped;
+    totalQs += t;
+    totalDur += (s.durationMs || 0);
+    sumCorrect += s.correct;
+    sumWrong += s.wrong;
+    sumSkipped += s.skipped;
 
-      const avgDur = totalSessions ? formatTime(Math.round(totalDur / totalSessions)) : "00:00:00";
+    xpTotal += (s.correct * 4) + (s.wrong * -1); // merged into same loop
+  });
 
-      statsContent.innerHTML = `
-        <div><strong>Profile:</strong> ${currentProfile}</div>
-        <div><strong>Sessions:</strong> ${totalSessions}</div>
-        <div><strong>Total Questions:</strong> ${totalQs}</div>
-        <div><strong>Average Duration:</strong> ${avgDur}</div>
-        <div style="margin-top:6px;"><strong>Overall Breakdown:</strong>
-          ✔ ${sumCorrect} (${percent(sumCorrect, totalQs)}) &nbsp;|&nbsp;
-          ❌ ${sumWrong} (${percent(sumWrong, totalQs)}) &nbsp;|&nbsp;
-          ⏭ ${sumSkipped} (${percent(sumSkipped, totalQs)})
-        </div>
-      `;
-    }
+  // update XP display
+  document.getElementById("profileXP").textContent = `XP: ${xpTotal}`;
+
+  const avgDur = totalSessions ? formatTime(Math.round(totalDur / totalSessions)) : "00:00:00";
+
+  statsContent.innerHTML = `
+    <div><strong>Profile:</strong> ${currentProfile}</div>
+    <div><strong>Sessions:</strong> ${totalSessions}</div>
+    <div><strong>Total Questions:</strong> ${totalQs}</div>
+    <div><strong>Average Duration:</strong> ${avgDur}</div>
+    <div style="margin-top:6px;"><strong>Overall Breakdown:</strong>
+      ✔ ${sumCorrect} (${percent(sumCorrect, totalQs)}) &nbsp;|&nbsp;
+      ❌ ${sumWrong} (${percent(sumWrong, totalQs)}) &nbsp;|&nbsp;
+      ⏭ ${sumSkipped} (${percent(sumSkipped, totalQs)})
+    </div>
+  `;
+}
+
+const showTodoBtn = document.getElementById("showTodoBtn");
+const todoPanel = document.getElementById("todoPanel");
+const todoInput = document.getElementById("todoInput");
+const addTodoBtn = document.getElementById("addTodoBtn");
+const todoList = document.getElementById("todoList");
+
+let todosUnsub = null; // Firestore listener
+
+function loadTodos(profile) {
+  if (!db) return;
+  if (todosUnsub) todosUnsub(); // stop old listener
+
+  todosUnsub = db.collection("profiles").doc(profile).collection("todos")
+    .orderBy("created", "desc")
+    .onSnapshot(snapshot => {
+      const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderTodos(items);
+    });
+}
+
+function renderTodos(items) {
+  todoList.innerHTML = "";
+  if (items.length === 0) {
+    todoList.innerHTML = `<li class="muted">No tasks yet.</li>`;
+    return;
+  }
+
+  items.forEach(task => {
+    const li = document.createElement("li");
+    li.style.display = "flex";
+    li.style.justifyContent = "space-between";
+    li.style.alignItems = "center";
+    li.style.padding = "6px 0";
+
+    const span = document.createElement("span");
+    span.textContent = task.text;
+    if (task.done) span.style.textDecoration = "line-through";
+    span.style.cursor = "pointer";
+    span.onclick = () => toggleTodo(task.id, !task.done);
+
+    const del = document.createElement("button");
+    del.textContent = "✖";
+    del.className = "danger";
+    del.style.padding = "4px 8px";
+    del.onclick = () => deleteTodo(task.id);
+
+    li.appendChild(span);
+    li.appendChild(del);
+    todoList.appendChild(li);
+  });
+}
+
+async function addTodo() {
+  const text = todoInput.value.trim();
+  if (!text || !currentProfile) return;
+  await db.collection("profiles").doc(currentProfile).collection("todos").add({
+    text, done: false, created: Date.now()
+  });
+  todoInput.value = "";
+}
+
+function toggleTodo(id, done) {
+  if (!currentProfile) return;
+  db.collection("profiles").doc(currentProfile).collection("todos").doc(id).update({ done });
+}
+
+function deleteTodo(id) {
+  if (!currentProfile) return;
+  db.collection("profiles").doc(currentProfile).collection("todos").doc(id).delete();
+}
+
+showTodoBtn.onclick = () => {
+  todoPanel.classList.toggle("hidden");
+};
+
+addTodoBtn.onclick = addTodo;
 
     /* ========= Graphs (Chart.js) ========= */
     function groupDailyLast7Days(list) {
